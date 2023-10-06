@@ -1,0 +1,30 @@
+name: jupyterbook
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with: {fetch-depth: 0}
+    - uses: actions/setup-python@v4
+      with: {python-version: '3.x'}
+    - run: pip install jupyter-book
+    - name: jupyter-book build
+      run: |
+        #jupyter-book build --builder dirhtml --warningiserror --nitpick --keep-going .
+        jupyter-book build --builder latex .
+    - uses: xu-cheng/latex-action@v3
+      with:
+        working_directory: _build/latex
+        root_file: book.tex
+        args: -pdf -dvi- -ps- -file-line-error -f -interaction=nonstopmode
+        latexmk_use_xelatex: true
+      env:
+        XINDYOPTS: -L english -C utf8 -M sphinx.xdy
+      continue-on-error: true
+    - uses: actions/upload-artifact@v3
+      with:
+        name: book
+        path: _build/latex/book.pdf
